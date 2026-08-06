@@ -1,0 +1,45 @@
+# Python / Virtual environments
+venv/
+.venv/
+env/
+ENV/
+backend/venv/
+backend/.venv/
+backend/env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Databases & local storage
+chroma_db/
+backend/chroma_db/
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+
+# Environment & secret files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+out/
+build/
+dist/
+.cache/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.log
