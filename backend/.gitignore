@@ -1,0 +1,12 @@
+.env
+venv/
+chroma_db/
+*.sqlite
+__pycache__/
+*.sqlite-shm
+*.sqlite-wal
+medintel_checkpoints.sqlite
+audit.py
+check.py
+diag_parse.py
+probe.py
