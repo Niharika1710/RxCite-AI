@@ -1,4 +1,4 @@
-## RxCiteAI
+# RxCite AI
 
 A pharmaceutical evidence assistant that answers drug questions grounded in FDA label evidence, with a confidence score on every answer and safety refusals when the evidence is thin. It is framed strictly as an **evidence assistant** — never a diagnosis or prescription tool.
 
@@ -8,7 +8,7 @@ Ask a question by text or by uploading a photo of a drug package. The system rou
 
 ## Why this project exists
 
-Most "chat with a PDF" RAG demos will confidently answer anything. A medical assistant that does the same is dangerous. MedIntel AI is built around the opposite principle: **it should know when it doesn't know, and say so.** The confidence score, the citation validation, and the safety gate are the point — the answer is only trustworthy because the system is willing to refuse.
+Most "chat with a PDF" RAG demos will confidently answer anything. A medical assistant that does the same is dangerous. RxCite AI is built around the opposite principle: **it should know when it doesn't know, and say so.** The confidence score, the citation validation, and the safety gate are the point — the answer is only trustworthy because the system is willing to refuse.
 
 ---
 
@@ -25,11 +25,11 @@ Most "chat with a PDF" RAG demos will confidently answer anything. A medical ass
 
 ## Project structure
 
-```
-MedIntelAI/
+\`\`\`
+RxCiteAI/
 ├── backend/     FastAPI + LangGraph multi-agent pipeline, ChromaDB vector store
 └── frontend/    Next.js single-page chat interface
-```
+\`\`\`
 
 ---
 
@@ -37,7 +37,7 @@ MedIntelAI/
 
 The backend is a multi-agent pipeline orchestrated with **LangGraph**. Each agent has a narrow responsibility and communicates through typed Pydantic contracts, so data flowing through the graph is validated and self-documenting.
 
-```
+\`\`\`
           ┌─────────┐
 Query ───▶│ Router  │  in scope? which drug?
           └────┬────┘
@@ -61,7 +61,7 @@ Query ───▶│ Router  │  in scope? which drug?
           ┌────▼──────┐
           │ Response  │  grounded answer + citations, or refusal
           └───────────┘
-```
+\`\`\`
 
 **Vision path:** an image upload is handled by a vision agent that extracts the generic drug name from the package, then feeds that name into the same pipeline above. If no question is supplied, the system asks what the user wants to know; if no drug can be read, it refuses cleanly.
 
@@ -71,7 +71,7 @@ Query ───▶│ Router  │  in scope? which drug?
 - **Deterministic confidence.** The confidence score is rule-based, not an LLM judgment call, so it is reproducible and explainable — it combines average retrieval distance, citation agreement, and coverage.
 - **Section-diverse retrieval.** Large FDA labels have hundreds of chunks; a naive top-k search lets bulky sections (clinical trials, adverse reactions) crowd out short but critical ones (indications, contraindications). Retrieval pulls a wide candidate pool and guarantees each label section is represented before filling remaining slots by relevance.
 - **Answerability awareness.** The response agent self-reports whether the retrieved evidence actually answers the question; when strong deterministic signals disagree with a flappy model verdict, the reproducible signals win.
-- **Human-in-the-loop triage.** The triage agent uses LangGraph's `interrupt()` with SQLite checkpointing to pause mid-conversation for clinical follow-ups and resume after the user replies, surviving a server restart.
+- **Human-in-the-loop triage.** The triage agent uses LangGraph's \`interrupt()\` with SQLite checkpointing to pause mid-conversation for clinical follow-ups and resume after the user replies, surviving a server restart.
 
 ---
 
@@ -81,7 +81,7 @@ Query ───▶│ Router  │  in scope? which drug?
 - FastAPI (HTTP API)
 - LangGraph (multi-agent orchestration + human-in-the-loop interrupts)
 - ChromaDB (vector store, cosine distance)
-- sentence-transformers `all-MiniLM-L6-v2` (local embeddings)
+- sentence-transformers \`all-MiniLM-L6-v2\` (local embeddings)
 - Google Gemini API (routing, citation, and response generation)
 
 **Frontend**
@@ -103,53 +103,53 @@ Query ───▶│ Router  │  in scope? which drug?
 
 ### 1. Clone
 
-```bash
-git clone https://github.com/YOUR_USERNAME/MedIntelAI.git
-cd MedIntelAI
-```
+\`\`\`bash
+git clone https://github.com/Niharika1710/RxCite-AI.git
+cd RxCite-AI
+\`\`\`
 
 ### 2. Backend
 
-```bash
+\`\`\`bash
 cd backend
 python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
-```
+\`\`\`
 
-Create a `.env` file in `backend/` (never commit this):
+Create a \`.env\` file in \`backend/\` (never commit this):
 
-```
+\`\`\`
 GOOGLE_API_KEY=your_key_here
 CHROMA_PERSIST_DIR=./chroma_db
-```
+\`\`\`
 
 Ingest drug data and build the vector store (one-time):
 
-```bash
+\`\`\`bash
 python -m app.ingestion.run_embedding
-```
+\`\`\`
 
 Run the API:
 
-```bash
+\`\`\`bash
 uvicorn app.main:app --reload
-```
+\`\`\`
 
-The API is served at `http://127.0.0.1:8000` (interactive docs at `/docs`).
+The API is served at \`http://127.0.0.1:8000\` (interactive docs at \`/docs\`).
 
 ### 3. Frontend
 
 In a second terminal, from the repo root:
 
-```bash
+\`\`\`bash
 cd frontend
 npm install
 npm run dev
-```
+\`\`\`
 
-The frontend expects the backend running at `http://127.0.0.1:8000`.
+The frontend expects the backend running at \`http://127.0.0.1:8000\`.
 
 ---
 
@@ -157,11 +157,11 @@ The frontend expects the backend running at `http://127.0.0.1:8000`.
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/api/query` | POST | Start a text query (`{query}`) or resume a paused triage thread (`{thread_id, reply}`). |
-| `/api/query-image` | POST | Multipart upload: a package photo plus an optional typed question. |
-| `/health` | GET | Health check. |
+| \`/api/query\` | POST | Start a text query (\`{query}\`) or resume a paused triage thread (\`{thread_id, reply}\`). |
+| \`/api/query-image\` | POST | Multipart upload: a package photo plus an optional typed question. |
+| \`/health\` | GET | Health check. |
 
-A turn either returns a final answer, or pauses and returns a follow-up question plus the `thread_id` needed to resume.
+A turn either returns a final answer, or pauses and returns a follow-up question plus the \`thread_id\` needed to resume.
 
 ---
 
@@ -177,4 +177,4 @@ A turn either returns a final answer, or pauses and returns a follow-up question
 
 ## Disclaimer
 
-MedIntel AI is an informational tool for exploring FDA label evidence. It is **not** a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical decisions.
+RxCite AI is an informational tool for exploring FDA label evidence. It is **not** a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical decisions.
