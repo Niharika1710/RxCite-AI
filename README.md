@@ -1,4 +1,4 @@
-# MedIntel AI
+## RxCiteAI
 
 A pharmaceutical evidence assistant that answers drug questions grounded in FDA label evidence, with a confidence score on every answer and safety refusals when the evidence is thin. It is framed strictly as an **evidence assistant** — never a diagnosis or prescription tool.
 

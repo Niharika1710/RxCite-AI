@@ -3,7 +3,7 @@
 import { ShieldCheck } from "lucide-react";
 
 // Change BRAND_NAME here to rename everywhere at once.
-export const BRAND_NAME = "MedIntel";
+export const BRAND_NAME = "RxCite";
 export const BRAND_SUFFIX = "AI";
 
 export default function Logo({ size = 20, showText = true, dark = false }: { size?: number; showText?: boolean; dark?: boolean }) {

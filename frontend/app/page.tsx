@@ -7,7 +7,7 @@ import Login from "./login";
 
 const API_URL = "http://127.0.0.1:8000/api/query";
 const IMAGE_API_URL = "http://127.0.0.1:8000/api/query-image";
-const STORAGE_KEY = "medintel_history";
+const STORAGE_KEY = "rxcite_history";
 
 const DOMAINS = [
   { id: "pharma",   label: "Pharmaceutical", source: "FDA drug labels",         available: true,  dot: "#5B8DB8" },
@@ -253,12 +253,12 @@ export default function Home() {
   const [themeKey, setThemeKey] = useState<ThemeKey>("light");
   const theme = THEMES[themeKey];
   useEffect(() => {
-    try { const t = localStorage.getItem("medintel_theme"); if (t === "dark" || t === "light") setThemeKey(t); } catch {}
+    try { const t = localStorage.getItem("rxcite_theme"); if (t === "dark" || t === "light") setThemeKey(t); } catch {}
   }, []);
   const toggleTheme = () => {
     setThemeKey((k) => {
       const next = k === "light" ? "dark" : "light";
-      try { localStorage.setItem("medintel_theme", next); } catch {}
+      try { localStorage.setItem("rxcite_theme", next); } catch {}
       return next;
     });
   };

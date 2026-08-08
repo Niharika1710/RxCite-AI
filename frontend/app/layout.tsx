@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MedIntel AI",
+  title: "RxCite AI",
   description: "Evidence-grounded pharmaceutical intelligence",
 };
 
