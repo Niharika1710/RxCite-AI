@@ -1,18 +1,17 @@
 """
 Wraps ChromaDB: handles embedding chunks and storing/querying them.
-
-Uses Google's hosted Gemini embedding API instead of the local
-SentenceTransformer model, which keeps memory usage low for
-deployment on Render's free instance.
 """
 
 import os
+from typing import List
 
 # Disable Chroma telemetry
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
 import chromadb
-from chromadb.utils import embedding_functions
+from chromadb import Documents, EmbeddingFunction, Embeddings
+
+from google import genai
 
 from app.config import settings
 
@@ -27,59 +26,114 @@ CHROMA_DIR = os.path.join(
 COLLECTION_NAME = "fda_drug_labels"
 
 
+# ---------------------------------------------------------
+# Gemini Embedding Function
+# ---------------------------------------------------------
+
+class GeminiEmbeddingFunction(EmbeddingFunction[Documents]):
+    """
+    Custom ChromaDB embedding function using Google's
+    Gemini embedding API.
+
+    This avoids Sentence Transformers and PyTorch,
+    which significantly reduces Render memory usage.
+    """
+
+    def __init__(self):
+        api_key = os.getenv("GOOGLE_API_KEY")
+
+        if not api_key:
+            raise RuntimeError(
+                "GOOGLE_API_KEY environment variable is not set."
+            )
+
+        self.client = genai.Client(api_key=api_key)
+
+        self.model_name = "gemini-embedding-001"
+
+    def __call__(self, input: Documents) -> Embeddings:
+        embeddings = []
+
+        for text in input:
+            response = self.client.models.embed_content(
+                model=self.model_name,
+                contents=text,
+                config={
+                    "task_type": "RETRIEVAL_DOCUMENT",
+                    "output_dimensionality": 768,
+                },
+            )
+
+            embeddings.append(
+                response.embeddings[0].values
+            )
+
+        return embeddings
+
+
+# ---------------------------------------------------------
+# Chroma Client
+# ---------------------------------------------------------
+
 def get_client():
     """Create and return the persistent ChromaDB client."""
-    return chromadb.PersistentClient(path=CHROMA_DIR)
 
-
-def get_embedding_function():
-    """
-    Create Google's Gemini embedding function.
-
-    Embeddings are generated through Google's API rather than
-    loading Sentence Transformers/PyTorch locally.
-
-    The GOOGLE_API_KEY environment variable must be configured
-    in Render.
-    """
-
-    return embedding_functions.GoogleGeminiEmbeddingFunction(
-        api_key_env_var="GOOGLE_API_KEY",
-        model_name="gemini-embedding-001",
-        task_type="RETRIEVAL_DOCUMENT",
-        dimension=768,
+    return chromadb.PersistentClient(
+        path=CHROMA_DIR
     )
 
 
+# ---------------------------------------------------------
+# Embedding Function
+# ---------------------------------------------------------
+
+def get_embedding_function():
+    """Return the Gemini embedding function."""
+
+    return GeminiEmbeddingFunction()
+
+
+# ---------------------------------------------------------
+# Collection
+# ---------------------------------------------------------
+
 def get_or_create_collection():
-    """Get the FDA drug label collection or create it if necessary."""
+    """
+    Get the existing ChromaDB collection or create it.
+    """
 
     client = get_client()
+
     embed_fn = get_embedding_function()
 
     collection = client.get_or_create_collection(
         name=COLLECTION_NAME,
         embedding_function=embed_fn,
         metadata={
-            "hnsw:space": "cosine",
+            "hnsw:space": "cosine"
         },
     )
 
     return collection
 
 
+# ---------------------------------------------------------
+# Add Documents
+# ---------------------------------------------------------
+
 def add_documents(documents: list[dict]):
     """
-    Add FDA evidence documents to ChromaDB.
+    Add documents to ChromaDB.
 
-    Each document should contain:
-        text
-        drug
-        section
-        source
-        chunk_index
+    Expected format:
 
-    Documents are inserted in batches to avoid oversized requests.
+    {
+        "text": "...",
+        "drug": "...",
+        "section": "...",
+        "source": "...",
+        "chunk_index": 0
+    }
     """
 
     collection = get_or_create_collection()
@@ -98,7 +152,10 @@ def add_documents(documents: list[dict]):
         )
 
         ids.append(doc_id)
-        texts.append(doc["text"])
+
+        texts.append(
+            doc["text"]
+        )
 
         metadatas.append(
             {
@@ -109,10 +166,14 @@ def add_documents(documents: list[dict]):
             }
         )
 
-    # Keep batches reasonably small
-    BATCH_SIZE = 150
+    # Keep batches small to reduce memory usage
+    BATCH_SIZE = 50
 
-    for start in range(0, len(ids), BATCH_SIZE):
+    for start in range(
+        0,
+        len(ids),
+        BATCH_SIZE
+    ):
 
         end = start + BATCH_SIZE
 
@@ -125,28 +186,26 @@ def add_documents(documents: list[dict]):
     return len(ids)
 
 
+# ---------------------------------------------------------
+# Query
+# ---------------------------------------------------------
+
 def query_collection(
     query_text: str,
     n_results: int = 5,
     drug_filter: str | None = None,
 ):
     """
-    Search the FDA drug-label collection.
-
-    Args:
-        query_text: User's question/search text.
-        n_results: Number of relevant chunks to return.
-        drug_filter: Optional drug name to restrict the search.
+    Search ChromaDB using semantic similarity.
     """
 
     collection = get_or_create_collection()
 
-    where_clause = None
-
-    if drug_filter:
-        where_clause = {
-            "drug": drug_filter,
-        }
+    where_clause = (
+        {"drug": drug_filter}
+        if drug_filter
+        else None
+    )
 
     results = collection.query(
         query_texts=[query_text],
