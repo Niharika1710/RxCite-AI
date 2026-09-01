@@ -5,8 +5,8 @@ import { PanelLeftClose, PanelLeft, ArrowUp, ChevronDown, Plus, ImagePlus, X, Su
 import Logo, { LogoMark } from "./logo";
 import Login from "./login";
 
-const API_URL = "http://127.0.0.1:8000/api/query";
-const IMAGE_API_URL = "http://127.0.0.1:8000/api/query-image";
+const API_URL = "https://rxcite-ai-api.onrender.com/api/query";
+const IMAGE_API_URL = "https://rxcite-ai-api.onrender.com/api/query-image";
 const STORAGE_KEY = "rxcite_history";
 
 const DOMAINS = [
