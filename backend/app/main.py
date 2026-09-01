@@ -8,12 +8,13 @@ app = FastAPI(title="MedIntel AI - Pharmaceutical Intelligence")
 # Allow the frontend (which we'll build next) to call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for dev only; lock this down later
+    allow_origins=[
+        "https://rx-cite-ai-7s6q.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(router, prefix="/api")
 
 
