@@ -130,7 +130,7 @@ const THEMES = {
 } as const;
 
 type ThemeKey = keyof typeof THEMES;
-type Theme = typeof THEMES["light"];
+type Theme = (typeof THEMES)[keyof typeof THEMES];
 
 // A turn in the active conversation.
 // kind "user"     -> something the person typed
