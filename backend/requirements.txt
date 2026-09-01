@@ -13,7 +13,6 @@ langgraph-checkpoint-sqlite==2.0.11
 
 chromadb==0.5.18
 google-genai
-google-generativeai
 
 requests==2.32.3
 tenacity==9.0.0
