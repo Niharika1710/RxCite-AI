@@ -3,7 +3,6 @@ Wraps ChromaDB: handles embedding chunks and storing/querying them.
 """
 
 import os
-from typing import List
 
 # Disable Chroma telemetry
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
@@ -12,8 +11,6 @@ import chromadb
 from chromadb import Documents, EmbeddingFunction, Embeddings
 
 from google import genai
-
-from app.config import settings
 
 
 CHROMA_DIR = os.path.join(
@@ -26,17 +23,13 @@ CHROMA_DIR = os.path.join(
 COLLECTION_NAME = "fda_drug_labels"
 
 
-# ---------------------------------------------------------
-# Gemini Embedding Function
-# ---------------------------------------------------------
-
 class GeminiEmbeddingFunction(EmbeddingFunction[Documents]):
     """
-    Custom ChromaDB embedding function using Google's
-    Gemini embedding API.
+    Custom ChromaDB embedding function using Google's Gemini
+    embedding API.
 
-    This avoids Sentence Transformers and PyTorch,
-    which significantly reduces Render memory usage.
+    This avoids Sentence Transformers and PyTorch, which
+    significantly reduces Render memory usage.
     """
 
     def __init__(self):
@@ -48,7 +41,6 @@ class GeminiEmbeddingFunction(EmbeddingFunction[Documents]):
             )
 
         self.client = genai.Client(api_key=api_key)
-
         self.model_name = "gemini-embedding-001"
 
     def __call__(self, input: Documents) -> Embeddings:
@@ -71,10 +63,6 @@ class GeminiEmbeddingFunction(EmbeddingFunction[Documents]):
         return embeddings
 
 
-# ---------------------------------------------------------
-# Chroma Client
-# ---------------------------------------------------------
-
 def get_client():
     """Create and return the persistent ChromaDB client."""
 
@@ -83,19 +71,11 @@ def get_client():
     )
 
 
-# ---------------------------------------------------------
-# Embedding Function
-# ---------------------------------------------------------
-
 def get_embedding_function():
     """Return the Gemini embedding function."""
 
     return GeminiEmbeddingFunction()
 
-
-# ---------------------------------------------------------
-# Collection
-# ---------------------------------------------------------
 
 def get_or_create_collection():
     """
@@ -103,7 +83,6 @@ def get_or_create_collection():
     """
 
     client = get_client()
-
     embed_fn = get_embedding_function()
 
     collection = client.get_or_create_collection(
@@ -116,10 +95,6 @@ def get_or_create_collection():
 
     return collection
 
-
-# ---------------------------------------------------------
-# Add Documents
-# ---------------------------------------------------------
 
 def add_documents(documents: list[dict]):
     """
@@ -152,10 +127,7 @@ def add_documents(documents: list[dict]):
         )
 
         ids.append(doc_id)
-
-        texts.append(
-            doc["text"]
-        )
+        texts.append(doc["text"])
 
         metadatas.append(
             {
@@ -166,14 +138,10 @@ def add_documents(documents: list[dict]):
             }
         )
 
-    # Keep batches small to reduce memory usage
+    # Small batches reduce memory usage
     BATCH_SIZE = 50
 
-    for start in range(
-        0,
-        len(ids),
-        BATCH_SIZE
-    ):
+    for start in range(0, len(ids), BATCH_SIZE):
 
         end = start + BATCH_SIZE
 
@@ -185,10 +153,6 @@ def add_documents(documents: list[dict]):
 
     return len(ids)
 
-
-# ---------------------------------------------------------
-# Query
-# ---------------------------------------------------------
 
 def query_collection(
     query_text: str,
