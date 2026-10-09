@@ -135,12 +135,16 @@ def triage_node(state: GraphState) -> GraphState:
 
     return {"intake": result.slots, "triage_output": result, "intake_replies": replies}
 
+
 def route_after_router(state: GraphState) -> str:
-    """Out of scope -> refuse. In scope -> gather context first."""
+    """Route queries according to the router's classification."""
     router = state["router_output"]
+
     if not router.is_in_scope:
         return "safety"
+
     return "triage"
+
 
 
 def route_after_triage(state: GraphState) -> str:
