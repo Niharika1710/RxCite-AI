@@ -191,8 +191,9 @@ medintel_graph = build_graph()
 
 
 
+
 def _shape(result: dict, thread_id: str) -> dict:
-    """Normalise a graph result into either a question or a final answer."""
+    """Normalize a graph result into a follow-up question or final answer."""
     if "__interrupt__" in result:
         payload = result["__interrupt__"][0].value
         return {
@@ -201,11 +202,22 @@ def _shape(result: dict, thread_id: str) -> dict:
             "question": payload.get("question"),
             "response": None,
         }
+
+    response = result.get("response_output")
+
+    if response is None:
+        # The graph may have returned only a partial state.
+        # Report the missing output instead of raising a KeyError.
+        raise RuntimeError(
+            f"Graph completed without response_output. "
+            f"Available result keys: {list(result.keys())}"
+        )
+
     return {
         "thread_id": thread_id,
         "awaiting_input": False,
         "question": None,
-        "response": result["response_output"],
+        "response": response,
     }
 
 
