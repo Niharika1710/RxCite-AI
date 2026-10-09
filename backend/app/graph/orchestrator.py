@@ -230,6 +230,7 @@ def start_query(query: str, thread_id: str | None = None) -> dict:
     thread_id = thread_id or str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
     result = medintel_graph.invoke({"query": query, "intake_replies": []}, config)
+    print("DEBUG GRAPH RESULT:", result, flush=True)
     return _shape(result, thread_id)
 
 
