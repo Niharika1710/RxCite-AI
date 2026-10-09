@@ -237,6 +237,7 @@ def resume_query(thread_id: str, reply: str) -> dict:
     """Resume a paused conversation with the user's answer."""
     config = {"configurable": {"thread_id": thread_id}}
     result = medintel_graph.invoke(Command(resume=reply), config)
+    print("DEBUG GRAPH RESULT:", result)
     return _shape(result, thread_id)
 
 if __name__ == "__main__":
