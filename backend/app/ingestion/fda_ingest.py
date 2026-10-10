@@ -2,10 +2,12 @@
 Pulls drug label data from the openFDA API and saves raw JSON to disk.
 No API key required for this volume of requests.
 """
+from app.retrieval.vector_store import add_documents
 import json
 import os
 import time
 import requests
+
 
 FDA_BASE_URL = "https://api.fda.gov/drug/label.json"
 RAW_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "raw_fda")
@@ -160,8 +162,17 @@ def process_all_to_documents() -> list[dict]:
 
 if __name__ == "__main__":
     ingest_all()
+
     print("\n--- Normalizing and chunking ---")
     docs = process_all_to_documents()
-    print(f"\nTotal chunks across all drugs: {len(docs)}")
-    print("\nSample chunk:")
-    print(docs[0])
+    print(f"Total chunks: {len(docs)}")
+
+    if docs:
+        stored = add_documents(docs)
+        print(f"Successfully stored {stored} chunks in ChromaDB.")
+
+        from app.retrieval.vector_store import get_or_create_collection
+        collection = get_or_create_collection()
+        print(f"Total documents in ChromaDB: {collection.count()}")
+    else:
+        print("No documents created. Nothing was stored.")
